@@ -120,9 +120,22 @@
     100%{ box-shadow:0 0 0 14px rgba(253,218,36,0); }
   }
 
+  .arrow-hint{
+    position:absolute;
+    pointer-events:none;
+    display:none;
+    animation:arrow-nudge 1s ease-in-out infinite;
+  }
+  .arrow-hint.is-active{ display:block; }
+  @keyframes arrow-nudge{
+    0%, 100%{ transform:translateX(0); }
+    50%{ transform:translateX(-30%); }
+  }
+
   @media (prefers-reduced-motion: reduce){
     .phone-img{ transition:none; }
     .mic-active i, .hotspot.is-pressed .mic-active::before{ animation:none; }
+    .arrow-hint{ animation:none; }
   }
 </style>
 
@@ -133,6 +146,8 @@
     <button class="hotspot" id="micHotspot" style="left:50.09%; top:77.25%; width:15%; height:8%;" aria-label="Mantén presionado para hablar">
       <span class="mic-active"><i></i><i></i><i></i><i></i></span>
     </button>
+    <img class="arrow-hint" id="highlightArrow" alt="" style="left:37.8555%; top:48.8286%; width:5.6893%; height:3.3292%;" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABoAAAAbCAYAAABiFp9rAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAAAOpJREFUeAHl1j0OgkAQhuFvwRgKo5WJiSfwAsbOxtYTeA8bT6ClXsDGkvNYWiCJhSb+dCKMYKKR8LNkmaXQtyMUDxQzu4LCUEEGKurPoeC0QnBeQ6XCUITQzYZojKAUFcg/LumxG1LgOaSaFOJApBAXkgtxIpkQN5IK6UASkC4kSry096w4Y5DnhtPVQtmE1YfRmX+ea7G31gDC3EO0Z+Au9kfwr/DdCUS9F37NApzFV5DZhNndgO5bBIcpOEvuOk1Y+lLVgGVvb2Ys/5hgxOTnERNW7OD7wuhiQ6X4HMkK5yxC9UMl+r3r1hO2ciIxF+YELgAAAABJRU5ErkJggg==" />
+    <img class="arrow-hint" id="dashboardArrow" alt="" style="left:84.2451%; top:51.4181%; width:5.2521%; height:3.0827%;" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAZCAYAAAArK+5dAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAAANpJREFUeAHVlj0KwjAYht/EiuIgiKMOju7i7OItXJwdvIsn8ASewZvo4M8kiLqpSYwo2mjbNO0X0IcWwpfwPgTyhTClgUc4PPNDAnl6/F4EOlhsBpCHGVyxC57hrNIHrw3hCk8dXh8jC9xneLyAKDxaQBj+LSAOv8PCV4XcjoBSmyzcFIgjxKIDFJvIS6E1f42Dd7Wqwxtg5S4Y4Q6gQsjzSl2XPSV2E0UFPgvUEkQVKSWIm6CSIGmSQgLbgrwSq8CQ7KfKFaOTE4/zZa3bUn+BWyOmFmTl/18VN0p823ICZxXcAAAAAElFTkSuQmCC" />
   </div>
 </div>
 
@@ -179,6 +194,8 @@
   var micHotspot = document.getElementById('micHotspot');
   var FADE_MS = 220;
   var pressing = false;
+  var highlightArrow = document.getElementById('highlightArrow');
+  var dashboardArrow = document.getElementById('dashboardArrow');
 
   function isInteractive(){
     return !!INTERACTIVE_SCREENS[idx];
@@ -189,6 +206,8 @@
     var interactive = isInteractive();
     micHotspot.classList.toggle('is-active', interactive);
     img.classList.toggle('is-static', interactive);
+    highlightArrow.classList.toggle('is-active', idx === 5);
+    dashboardArrow.classList.toggle('is-active', idx === 7);
     playVoice(idx);
   }
 

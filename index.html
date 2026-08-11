@@ -66,8 +66,23 @@
   .hotspot.is-pressed{
     transform:translate(-50%,-50%) scale(0.86);
   }
+  .hotspot::after{
+    content:"";
+    position:absolute;
+    inset:-30%;
+    border-radius:50%;
+    box-shadow:0 0 0 0 rgba(253,218,36,.55);
+  }
+  .hotspot.is-pressed::after{
+    animation:pulse-ring 1.05s ease-out infinite;
+  }
+  @keyframes pulse-ring{
+    0%{ box-shadow:0 0 0 0 rgba(253,218,36,.5); }
+    100%{ box-shadow:0 0 0 16px rgba(253,218,36,0); }
+  }
   @media (prefers-reduced-motion: reduce){
     .hotspot{ transition:none; }
+    .hotspot.is-pressed::after{ animation:none; }
   }
 </style>
 
@@ -90,30 +105,62 @@
   var screenImg = document.getElementById('screen');
   var hotspot = document.getElementById('hotspot');
 
+  var state = 'idle'; // idle | pressed | listening | busy
+  var pressTimer = null;
+  var seqTimers = [];
+
   function setScreen(key){
     screenImg.src = IMAGES[key];
   }
-
-  function onPress(){
-    hotspot.classList.add('is-pressed');
-    hotspot.setAttribute('aria-pressed', 'true');
+  function clearSeq(){
+    seqTimers.forEach(function(id){ clearTimeout(id); });
+    seqTimers = [];
   }
 
-  function onRelease(){
-    hotspot.classList.remove('is-pressed');
-    hotspot.setAttribute('aria-pressed', 'false');
-    // ← aquí va la función que se dispara al soltar
-  }
-
-  hotspot.addEventListener('pointerdown', function(e){
+  function onPointerDown(e){
+    if (state === 'busy') return;
     e.preventDefault();
     try { hotspot.setPointerCapture(e.pointerId); } catch(err){}
-    onPress();
-  });
-  hotspot.addEventListener('pointerup', onRelease);
-  hotspot.addEventListener('pointercancel', onRelease);
+    hotspot.classList.add('is-pressed');
+    hotspot.setAttribute('aria-pressed', 'true');
+    state = 'pressed';
+    setScreen('dim');
+    pressTimer = setTimeout(function(){
+      if (state === 'pressed'){
+        state = 'listening';
+        setScreen('listen');
+      }
+    }, 260);
+  }
+
+  function endPress(released){
+    clearTimeout(pressTimer);
+    hotspot.classList.remove('is-pressed');
+    hotspot.setAttribute('aria-pressed', 'false');
+    if (released && (state === 'pressed' || state === 'listening')){
+      runReleaseSequence(); // ← se dispara la función al soltar
+    } else if (state !== 'idle' && state !== 'busy'){
+      state = 'idle';
+      setScreen('idle');
+    }
+  }
+
+  function runReleaseSequence(){
+    state = 'busy';
+    setScreen('toast');
+    seqTimers.push(setTimeout(function(){ setScreen('suggestDim'); }, 1500));
+    seqTimers.push(setTimeout(function(){ setScreen('suggestFinal'); }, 1950));
+    seqTimers.push(setTimeout(function(){
+      state = 'idle';
+      setScreen('idle');
+    }, 3750));
+  }
+
+  hotspot.addEventListener('pointerdown', onPointerDown);
+  hotspot.addEventListener('pointerup', function(){ endPress(true); });
+  hotspot.addEventListener('pointercancel', function(){ endPress(false); });
   hotspot.addEventListener('pointerleave', function(){
-    if (hotspot.classList.contains('is-pressed')) onRelease();
+    if (state === 'pressed' || state === 'listening') endPress(false);
   });
 
   setScreen('idle');

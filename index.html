@@ -105,62 +105,33 @@
   var screenImg = document.getElementById('screen');
   var hotspot = document.getElementById('hotspot');
 
-  var state = 'idle'; // idle | pressed | listening | busy
-  var pressTimer = null;
-  var seqTimers = [];
+  // Pantalla 1: reposo. Sin temporizadores ni secuencia automática —
+  // cada paso siguiente se agrega a mano cuando se define el flujo.
+  var current = 'idle';
 
   function setScreen(key){
+    current = key;
     screenImg.src = IMAGES[key];
-  }
-  function clearSeq(){
-    seqTimers.forEach(function(id){ clearTimeout(id); });
-    seqTimers = [];
   }
 
   function onPointerDown(e){
-    if (state === 'busy') return;
     e.preventDefault();
     try { hotspot.setPointerCapture(e.pointerId); } catch(err){}
     hotspot.classList.add('is-pressed');
     hotspot.setAttribute('aria-pressed', 'true');
-    state = 'pressed';
-    setScreen('dim');
-    pressTimer = setTimeout(function(){
-      if (state === 'pressed'){
-        state = 'listening';
-        setScreen('listen');
-      }
-    }, 260);
   }
 
-  function endPress(released){
-    clearTimeout(pressTimer);
+  function onPointerUp(){
     hotspot.classList.remove('is-pressed');
     hotspot.setAttribute('aria-pressed', 'false');
-    if (released && (state === 'pressed' || state === 'listening')){
-      runReleaseSequence(); // ← se dispara la función al soltar
-    } else if (state !== 'idle' && state !== 'busy'){
-      state = 'idle';
-      setScreen('idle');
-    }
-  }
-
-  function runReleaseSequence(){
-    state = 'busy';
-    setScreen('toast');
-    seqTimers.push(setTimeout(function(){ setScreen('suggestDim'); }, 1500));
-    seqTimers.push(setTimeout(function(){ setScreen('suggestFinal'); }, 1950));
-    seqTimers.push(setTimeout(function(){
-      state = 'idle';
-      setScreen('idle');
-    }, 3750));
+    // ← el siguiente paso del flujo se conecta aquí
   }
 
   hotspot.addEventListener('pointerdown', onPointerDown);
-  hotspot.addEventListener('pointerup', function(){ endPress(true); });
-  hotspot.addEventListener('pointercancel', function(){ endPress(false); });
+  hotspot.addEventListener('pointerup', onPointerUp);
+  hotspot.addEventListener('pointercancel', onPointerUp);
   hotspot.addEventListener('pointerleave', function(){
-    if (state === 'pressed' || state === 'listening') endPress(false);
+    if (hotspot.classList.contains('is-pressed')) onPointerUp();
   });
 
   setScreen('idle');

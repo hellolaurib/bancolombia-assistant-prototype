@@ -31,11 +31,9 @@
     user-select:none;
     -webkit-user-drag:none;
     opacity:1;
-    transform:scale(1);
-    transition:opacity .28s ease, transform .12s ease;
+    transition:opacity .28s ease;
   }
   #screen.is-fading{ opacity:0; }
-  #screen:active{ transform:scale(.985); }
 
   @media (prefers-reduced-motion: reduce){
     #screen{ transition:none; }
